@@ -12,7 +12,8 @@ app = Flask(__name__)
 # A simple in-memory cache to store translated text and avoid redundant API calls
 CACHE = {}
 # A list of supported languages as provided by MyMemory API (and simplified for our use case)
-SUPPORTED_LANGS = ['vi', 'en', 'ru', 'zh', 'ko', 'ja', 'pt', 'es']
+SUPPORTED_LANGS = ["vi", "en", "ru", "zh", "ko", "ja", "pt", "es", "th", "km", "lo",
+]
 
 @app.route('/api/translate', methods=['POST'])
 def translate_text():
