@@ -11,10 +11,6 @@ app = Flask(__name__)
 
 # A simple in-memory cache to store translated text and avoid redundant API calls
 CACHE = {}
-# A list of supported languages as provided by MyMemory API (and simplified for our use case)
-SUPPORTED_LANGS = [
-    "vi", "en", "ru", "zh", "ko", "ja", "pt", "es", "th", "km", "lo",
-]
 
 @app.route('/api/translate', methods=['POST'])
 def translate_text():
@@ -30,28 +26,25 @@ def translate_text():
 
         # Extract the required fields, with default values if not present
         text_to_translate = data.get('q', '')
-        source_lang = data.get('source', 'vi')
-        target_lang = data.get('target', 'en')
+        source_lang = data.get('source', 'auto')  # 'auto' để MyMemory tự nhận diện
+        target_lang = data.get('target', 'en')    # Mặc định là tiếng Anh
 
         # Simple validation
         if not text_to_translate:
             return jsonify({"error": "Text to translate is empty"}), 400
-        if target_lang not in SUPPORTED_LANGS:
-            return jsonify({"error": f"Target language '{target_lang}' is not supported"}), 400
         
         # Construct a unique cache key for the request
         cache_key = f"{text_to_translate}:{source_lang}:{target_lang}"
         if cache_key in CACHE:
             return jsonify({"translatedText": CACHE[cache_key]})
 
-        # LibreTranslate-compatible API call to MyMemory
+        # API call to MyMemory
         api_url = f"https://api.mymemory.translated.net/get?q={urllib.parse.quote(text_to_translate)}&langpair={source_lang}|{target_lang}"
-        
         response = requests.get(api_url)
         response.raise_for_status()  # Raise an exception for bad status codes
 
         translation_data = response.json()
-        translated_text = translation_data['responseData']['translatedText']
+        translated_text = translation_data.get('responseData', {}).get('translatedText', '')
 
         if not translated_text:
             # Fallback mechanism if no translation is returned
@@ -77,3 +70,4 @@ def translate_text():
 # It should not be modified, Flask handles the rest.
 if __name__ == '__main__':
     app.run(debug=True)
+    
